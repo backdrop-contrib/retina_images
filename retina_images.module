@@ -1,0 +1,141 @@
+<?php
+
+/**
+ * @file
+ * This module provides an image effect to assist in outputing high resolution images.
+ */
+
+/**
+ * Implements hook_image_effect_info_alter
+ */
+function retina_images_image_effect_info_alter(&$effects) {
+  $effects['image_scale']['form callback'] = 'retina_images_image_scale_form';
+  $effects['image_scale']['effect callback'] = 'retina_images_image_scale_effect';
+
+  $effects['image_scale_and_crop']['form callback'] = 'retina_images_image_resize_form';
+  $effects['image_scale_and_crop']['effect callback'] = 'retina_images_image_scale_and_crop_effect';
+
+  $effects['image_resize']['form callback'] = 'retina_images_image_resize_form';
+  $effects['image_resize']['effect callback'] = 'retina_images_image_resize_effect';
+
+}
+
+/**
+ * Multiply the height and width keys of an array by a variable amount.
+ */
+function retina_images_multiply_data_dimensions(&$data, $int = 2) {
+  $data['width'] = $data['width'] * $int;
+  $data['height'] = $data['height'] * $int;
+}
+
+function retina_images_form_helper(&$form, $data) {
+  $form['retinafy'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => (isset($data['retinafy'])) ? $data['retinafy'] : 0,
+    '#title' => t('Retinafy'),
+    '#description' => t('Scale and output this image with increased resolution. It is recommended to allow upscaling with this option and set image qualtiy to 25.'),
+  );
+}
+
+/**
+ * Form structure for the image scale form.
+ *
+ * Note that this is not a complete form, it only contains the portion of the
+ * form for configuring the scale options. Therefore it does not not need to
+ * include metadata about the effect, nor a submit button.
+ *
+ * @param $data
+ *   The current configuration for this scale effect.
+ */
+function retina_images_image_scale_form($data) {
+  $form = image_scale_form($data);
+  retina_images_form_helper($form, $data);
+  return $form;
+}
+
+
+/**
+ * Image effect callback; Scale an image resource.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $data
+ *   An array of attributes to use when performing the scale effect with the
+ *   following items:
+ *   - "width": An integer representing the desired width in pixels.
+ *   - "height": An integer representing the desired height in pixels.
+ *   - "upscale": A boolean indicating that the image should be upscaled if the
+ *     dimensions are larger than the original image.
+ *
+ * @return
+ *   TRUE on success. FALSE on failure to scale image.
+ *
+ * @see image_scale()
+ */
+function retina_images_image_scale_effect(&$image, $data) {
+  // Set sane default values.
+  $data += array(
+    'width' => NULL,
+    'height' => NULL,
+    'upscale' => FALSE,
+  );
+
+  retina_images_multiply_data_dimensions($data);
+  return image_scale_effect($image, $data);
+}
+
+/**
+ * Form structure for the image resize form.
+ *
+ * Note that this is not a complete form, it only contains the portion of the
+ * form for configuring the resize options. Therefore it does not not need to
+ * include metadata about the effect, nor a submit button.
+ *
+ * @param $data
+ *   The current configuration for this resize effect.
+ */
+function retina_images_image_resize_form($data) {
+  $form = image_resize_form($data);
+  retina_images_form_helper($form, $data);
+  return $form;
+}
+
+/**
+ * Image effect callback; Scale and crop an image resource.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $data
+ *   An array of attributes to use when performing the scale and crop effect
+ *   with the following items:
+ *   - "width": An integer representing the desired width in pixels.
+ *   - "height": An integer representing the desired height in pixels.
+ * @return
+ *   TRUE on success. FALSE on failure to scale and crop image.
+ * @see image_scale_and_crop()
+ */
+function retina_images_image_scale_and_crop_effect(&$image, $data) {
+  retina_images_multiply_data_dimensions($data);
+  return image_scale_and_crop_effect($image, $data);
+}
+
+/**
+ * Image effect callback; Resize an image resource.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $data
+ *   An array of attributes to use when performing the resize effect with the
+ *   following items:
+ *   - "width": An integer representing the desired width in pixels.
+ *   - "height": An integer representing the desired height in pixels.
+ *
+ * @return
+ *   TRUE on success. FALSE on failure to resize image.
+ *
+ * @see image_resize()
+ */
+function retina_images_image_resize_effect(&$image, $data) {
+  retina_images_multiply_data_dimensions($data);
+  return image_resize_effect($image, $data);
+}

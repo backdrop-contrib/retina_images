@@ -1,0 +1,4 @@
+name = "Retina Images"
+description = "Provide an image effect to output images in high resolution format for high resolution displays."
+core = 7.x
+dependencies[] = image
