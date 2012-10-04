@@ -9,25 +9,68 @@
  * Implements hook_image_effect_info_alter
  */
 function retina_images_image_effect_info_alter(&$effects) {
+  // Scale effect
   $effects['image_scale']['form callback'] = 'retina_images_image_scale_form';
   $effects['image_scale']['effect callback'] = 'retina_images_image_scale_effect';
+  $effects['image_scale']['summary theme'] = 'retina_images_image_scale_summary';
 
+  // Scale and crop effect
   $effects['image_scale_and_crop']['form callback'] = 'retina_images_image_resize_form';
   $effects['image_scale_and_crop']['effect callback'] = 'retina_images_image_scale_and_crop_effect';
+  $effects['image_scale_and_crop']['summary theme'] = 'retina_images_image_resize_summary';
 
+  // Resize effect
   $effects['image_resize']['form callback'] = 'retina_images_image_resize_form';
   $effects['image_resize']['effect callback'] = 'retina_images_image_resize_effect';
+  $effects['image_resize']['summary theme'] = 'retina_images_image_resize_summary';
 
+  // Crop effect
+  $effects['image_crop']['form callback'] = 'retina_images_image_crop_form';
+  $effects['image_crop']['effect callback'] = 'retina_images_image_crop_effect';
+  $effects['image_crop']['summary theme'] = 'retina_images_image_crop_summary';
 }
 
 /**
- * Multiply the height and width keys of an array by a variable amount.
+ * Implements hook_theme().
  */
-function retina_images_multiply_data_dimensions(&$data, $int = 2) {
-  $data['width'] = $data['width'] * $int;
-  $data['height'] = $data['height'] * $int;
+function retina_images_theme() {
+  return array(
+    'retina_images_image_crop_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
+    'retina_images_image_resize_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
+    'retina_images_image_scale_summary' => array(
+      'variables' => array('data' => NULL),
+    ),
+  );
 }
 
+/**
+ * Conditionally multiply the height and width keys of an array by a variable amount.
+ *
+ * @param $data
+ *   The configuration data for a specific image effect. This is expected to
+ *   have a 'width' and 'height' key that will be modified. Passed by reference.
+ * @param int $int
+ *   The amount that the width and height will be multiplied by. Defaults to 2.
+ */
+function retina_images_multiply_data_dimensions(&$data, $int = 2) {
+  if ($data['retinafy']) {
+    $data['width'] = $data['width'] * $int;
+    $data['height'] = $data['height'] * $int;
+  }
+}
+
+/**
+ * Helper function to add a "Retinafy" checkbox to a image effect form.
+ *
+ * @param array $form
+ *   The form to modify. Passed by reference.
+ * @param array $data
+ *   The configuration data for the specific image effect.
+ */
 function retina_images_form_helper(&$form, $data) {
   $form['retinafy'] = array(
     '#type' => 'checkbox',
@@ -101,25 +144,6 @@ function retina_images_image_resize_form($data) {
 }
 
 /**
- * Image effect callback; Scale and crop an image resource.
- *
- * @param $image
- *   An image object returned by image_load().
- * @param $data
- *   An array of attributes to use when performing the scale and crop effect
- *   with the following items:
- *   - "width": An integer representing the desired width in pixels.
- *   - "height": An integer representing the desired height in pixels.
- * @return
- *   TRUE on success. FALSE on failure to scale and crop image.
- * @see image_scale_and_crop()
- */
-function retina_images_image_scale_and_crop_effect(&$image, $data) {
-  retina_images_multiply_data_dimensions($data);
-  return image_scale_and_crop_effect($image, $data);
-}
-
-/**
  * Image effect callback; Resize an image resource.
  *
  * @param $image
@@ -139,3 +163,152 @@ function retina_images_image_resize_effect(&$image, $data) {
   retina_images_multiply_data_dimensions($data);
   return image_resize_effect($image, $data);
 }
+
+/**
+ * Image effect callback; Scale and crop an image resource.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $data
+ *   An array of attributes to use when performing the scale and crop effect
+ *   with the following items:
+ *   - "width": An integer representing the desired width in pixels.
+ *   - "height": An integer representing the desired height in pixels.
+ * @return
+ *   TRUE on success. FALSE on failure to scale and crop image.
+ * @see image_scale_and_crop()
+ */
+function retina_images_image_scale_and_crop_effect(&$image, $data) {
+  retina_images_multiply_data_dimensions($data);
+  return image_scale_and_crop_effect($image, $data);
+}
+
+
+/**
+ * Form structure for the image crop form.
+ *
+ * Note that this is not a complete form, it only contains the portion of the
+ * form for configuring the crop options. Therefore it does not not need to
+ * include metadata about the effect, nor a submit button.
+ *
+ * @param $data
+ *   The current configuration for this crop effect.
+ */
+function retina_images_image_crop_form($data) {
+  $form = image_crop_form($data);
+  retina_images_form_helper($form, $data);
+
+  return $form;
+}
+
+/**
+ * Image effect callback; Crop an image resource.
+ *
+ * @param $image
+ *   An image object returned by image_load().
+ * @param $data
+ *   An array of attributes to use when performing the crop effect with the
+ *   following items:
+ *   - "width": An integer representing the desired width in pixels.
+ *   - "height": An integer representing the desired height in pixels.
+ *   - "anchor": A string describing where the crop should originate in the form
+ *     of "XOFFSET-YOFFSET". XOFFSET is either a number of pixels or
+ *     "left", "center", "right" and YOFFSET is either a number of pixels or
+ *     "top", "center", "bottom".
+ * @return
+ *   TRUE on success. FALSE on failure to crop image.
+ * @see image_crop()
+ */
+function retina_images_image_crop_effect(&$image, $data) {
+  // Set sane default values.
+  $data += array(
+    'anchor' => 'center-center',
+  );
+  retina_images_multiply_data_dimensions($data);
+  return image_crop_effect($image, $data);
+}
+
+/**
+ * Implements hook_image_default_styles().
+ */
+function retina_images_image_default_styles() {
+  $styles = array();
+
+  $styles['thumbnail_retina'] = array(
+    'effects' => array(
+      array(
+        'name' => 'image_scale',
+        'data' => array('width' => 100, 'height' => 100, 'upscale' => 1, 'retinafy' => 1),
+        'weight' => 0,
+      ),
+    )
+  );
+
+  $styles['medium_retina'] = array(
+    'effects' => array(
+      array(
+        'name' => 'image_scale',
+        'data' => array('width' => 220, 'height' => 220, 'upscale' => 1, 'retinafy' => 1),
+        'weight' => 0,
+      ),
+    )
+  );
+
+  $styles['large_retina'] = array(
+    'effects' => array(
+      array(
+        'name' => 'image_scale',
+        'data' => array('width' => 480, 'height' => 480, 'upscale' => 0, 'retinafy' => 1),
+        'weight' => 0,
+      ),
+    )
+  );
+
+  return $styles;
+}
+
+/**
+ * Returns HTML for a summary of an image scale effect.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - data: The current configuration for this scale effect.
+ *
+ * @ingroup themeable
+ */
+function theme_retina_images_image_scale_summary($variables) {
+  $data = $variables['data'];
+
+  return theme('image_scale_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+}
+
+/**
+ * Returns HTML for a summary of an image resize effect.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - data: The current configuration for this resize effect.
+ *
+ * @ingroup themeable
+ */
+function theme_retina_images_image_resize_summary($variables) {
+  $data = $variables['data'];
+
+  return theme('image_resize_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+}
+
+/**
+ * Returns HTML for a summary of an image crop effect.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - data: The current configuration for this crop effect.
+ *
+ * @ingroup themeable
+ */
+function theme_retina_images_image_crop_summary($variables) {
+  $data = $variables['data'];
+
+  return theme('image_crop_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+}
+
