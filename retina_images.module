@@ -57,7 +57,7 @@ function retina_images_theme() {
  *   The amount that the width and height will be multiplied by. Defaults to 2.
  */
 function retina_images_multiply_data_dimensions(&$data, $int = 2) {
-  if ($data['retinafy']) {
+  if (isset($data['retinafy']) && $data['retinafy']) {
     $data['width'] = $data['width'] * $int;
     $data['height'] = $data['height'] * $int;
   }
@@ -279,7 +279,8 @@ function retina_images_image_default_styles() {
 function theme_retina_images_image_scale_summary($variables) {
   $data = $variables['data'];
 
-  return theme('image_scale_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+  $retinafied =  isset($data['retinafy']) ? $data['retinafy'] : FALSE;
+  return theme('image_scale_summary', $variables) . ' ' . ($retinafied ? '(' . t('retinafied') . ')' : '');
 }
 
 /**
