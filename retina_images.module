@@ -314,7 +314,8 @@ function theme_retina_images_image_scale_summary($variables) {
 function theme_retina_images_image_resize_summary($variables) {
   $data = $variables['data'];
 
-  return theme('image_resize_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+  $retinafied =  isset($data['retinafy']) ? $data['retinafy'] : FALSE;
+  return theme('image_resize_summary', $variables) . ' ' . ($retinafied ? '(' . t('retinafied') . ')' : '');
 }
 
 /**
@@ -329,7 +330,8 @@ function theme_retina_images_image_resize_summary($variables) {
 function theme_retina_images_image_crop_summary($variables) {
   $data = $variables['data'];
 
-  return theme('image_crop_summary', $variables) . ' ' . ($data['retinafy'] ? '(' . t('retinafied') . ')' : '');
+  $retinafied =  isset($data['retinafy']) ? $data['retinafy'] : FALSE;
+  return theme('image_crop_summary', $variables) . ' ' . ($retinafied ? '(' . t('retinafied') . ')' : '');
 }
 
 /**
