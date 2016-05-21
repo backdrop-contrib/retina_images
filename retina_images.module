@@ -360,7 +360,7 @@ function retina_images_form_image_style_form_alter(&$form, &$form_state) {
 function theme_retina_images_style_preview($variables) {
   $style = $variables['style'];
 
-  $sample_image = variable_get('image_style_preview_image', drupal_get_path('module', 'image') . '/sample.png');
+  $sample_image = backdrop_get_path('module', 'image') . '/images/sample.png';
   $sample_width = 160;
   $sample_height = 160;
 
@@ -437,13 +437,13 @@ function theme_retina_images_style_preview($variables) {
  * Menu callback for previewing a retinafied image.
  */
 function retina_images_retina_style_preview($style) {
-  $image = $sample_image = variable_get('image_style_preview_image', drupal_get_path('module', 'image') . '/sample.png');
+  $image = $sample_image = backdrop_get_path('module', 'image') . '/images/sample.png';
   $image_tag = theme('image_style', array('style_name' => $style['name'], 'path' => $image));
 
   $final_output_size = array('width' => 0, 'height' => 0);
   image_style_transform_dimensions($style['name'], $final_output_size);
 
-  $filename = drupal_basename($image);
+  $filename = backdrop_basename($image);
 
   $output = <<<EOT
 <html>
@@ -457,5 +457,5 @@ function retina_images_retina_style_preview($style) {
 
 EOT;
   print $output;
-  drupal_exit();
+  backdrop_exit();
 }
