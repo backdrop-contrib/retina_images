@@ -4,3 +4,4 @@ core = 7.x
 dependencies[] = image
 backdrop = 1.x
 version = 1.0.0
+type = module
