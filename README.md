@@ -1,5 +1,5 @@
 Retina Images
----------------------
+===============
 
 Retina Images adds an option to all image effects included with core to allow them to output high resolution images for high DPI or retina displays.
 
